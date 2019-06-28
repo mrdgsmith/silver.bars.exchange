@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import static java.math.BigDecimal.valueOf;
 
-public class Money {
+public class Money implements Comparable<Money> {
     private final BigDecimal price;
 
     private Money(final BigDecimal price) {
@@ -34,6 +34,11 @@ public class Money {
     @Override
     public int hashCode() {
         return Objects.hash(price);
+    }
+
+    @Override
+    public int compareTo(final Money otherMoney) {
+        return this.price.compareTo(otherMoney.price);
     }
 
     public static final class MoneyBuilder {

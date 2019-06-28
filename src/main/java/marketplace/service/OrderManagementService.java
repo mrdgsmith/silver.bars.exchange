@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
 import static java.lang.Runtime.getRuntime;
+import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.*;
 import static marketplace.domain.Event.CANCEL;
@@ -32,7 +34,7 @@ public class OrderManagementService {
     private static List<OrderDisplay> createDisplayOrders(final ConcurrentMap<OrderType, List<Order>> orders
             , final OrderType orderType
             , final Comparator<OrderDisplay> orderDisplayComparator) {
-        return orders.get(orderType).stream()
+        return orders.getOrDefault(orderType, emptyList()).stream()
                 .collect(groupingBy(Order::getPricePerKilogram, toList()))
                 .entrySet().stream()
                 .map(entry -> anOrderDisplay()
@@ -59,11 +61,10 @@ public class OrderManagementService {
                 .collect(groupingByConcurrent(Order::getType));
 
         final Callable<List<OrderDisplay>> getBuyOrders = () -> createDisplayOrders(orders, BUY
-                , (orderDisplay1, orderDisplay2) -> orderDisplay2.getPricePerKilogram().getPrice()
-                        .compareTo(orderDisplay1.getPricePerKilogram().getPrice()));
+                , comparing(OrderDisplay::getPricePerKilogram).reversed());
 
         final Callable<List<OrderDisplay>> getSellOrders = () -> createDisplayOrders(orders, SELL
-                , Comparator.comparing(orderDisplay -> orderDisplay.getPricePerKilogram().getPrice()));
+                , comparing(OrderDisplay::getPricePerKilogram));
 
         var executorService = newFixedThreadPool(getRuntime().availableProcessors());
         final var processBuyOrders = executorService.submit(getBuyOrders);

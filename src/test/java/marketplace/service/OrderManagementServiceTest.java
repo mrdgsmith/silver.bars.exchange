@@ -77,6 +77,14 @@ class OrderManagementServiceTest {
     @DisplayName("Display buy orders for unique price in order of highest price")
     void displayCurrentOrderBoardForBuyWithOrderedOfHighestPrice() throws ExecutionException, InterruptedException {
         when(orderRepository.getLiveOrders()).thenReturn(of(anOrder()
+                        .withUserId("user4")
+                        .withQuantity(5.8)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(582L)
+                                .build())
+                        .withType(BUY)
+                        .build()
+                , anOrder()
                         .withUserId("user1")
                         .withQuantity(4.8)
                         .withPricePerKilogram(aMoney()
@@ -99,14 +107,6 @@ class OrderManagementServiceTest {
                                 .withPrice(646L)
                                 .build())
                         .withType(SELL)
-                        .build()
-                , anOrder()
-                        .withUserId("user4")
-                        .withQuantity(5.8)
-                        .withPricePerKilogram(aMoney()
-                                .withPrice(582L)
-                                .build())
-                        .withType(BUY)
                         .build()));
 
         var orderBoard = orderManagementServiceUnderTest.getOrderBoard();
@@ -124,6 +124,55 @@ class OrderManagementServiceTest {
                                 .build())
                         .withType(BUY)
                         .build());
+
+        verify(orderRepository).getLiveOrders();
+        verifyNoMoreInteractions(orderRepository);
+    }
+
+    @Test
+    @DisplayName("Display sell orders for unique price in order of highest price")
+    void displayCurrentOrderBoardForSellWithOrderedOfLowestPrice() throws ExecutionException, InterruptedException {
+        when(orderRepository.getLiveOrders()).thenReturn(of(anOrder()
+                        .withUserId("user1")
+                        .withQuantity(8.4)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(582L)
+                                .build())
+                        .withType(SELL)
+                        .build()
+                , anOrder()
+                        .withUserId("user4")
+                        .withQuantity(5.8)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(582L)
+                                .build())
+                        .withType(SELL)
+                        .build()
+                , anOrder()
+                        .withUserId("user1")
+                        .withQuantity(3.1)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(789L)
+                                .build())
+                        .withType(SELL)
+                        .build()));
+
+        var orderBoard = orderManagementServiceUnderTest.getOrderBoard();
+        assertThat(orderBoard.getSellOrders()).containsExactly(anOrderDisplay()
+                        .withQuantity(14.2)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(582L)
+                                .build())
+                        .withType(SELL)
+                        .build()
+                , anOrderDisplay()
+                        .withQuantity(3.1)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(789L)
+                                .build())
+                        .withType(SELL)
+                        .build()
+        );
 
         verify(orderRepository).getLiveOrders();
         verifyNoMoreInteractions(orderRepository);
