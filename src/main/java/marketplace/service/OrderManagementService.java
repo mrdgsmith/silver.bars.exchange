@@ -4,14 +4,17 @@ import marketplace.domain.Order;
 import marketplace.domain.OrderBoard;
 import marketplace.domain.OrderDisplay;
 import marketplace.domain.OrderType;
+import marketplace.domain.TinyType.Money;
 import marketplace.domain.TinyType.OrderId;
 import marketplace.repository.OrderRepository;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 import static java.lang.Runtime.getRuntime;
 import static java.util.Collections.emptyList;
@@ -37,15 +40,19 @@ public class OrderManagementService {
         return orders.getOrDefault(orderType, emptyList()).stream()
                 .collect(groupingBy(Order::getPricePerKilogram, toList()))
                 .entrySet().stream()
-                .map(entry -> anOrderDisplay()
-                        .withPricePerKilogram(entry.getKey())
-                        .withQuantity(entry.getValue().stream()
-                                .map(Order::getQuantity)
-                                .reduce(Double::sum).orElse(null))
-                        .withType(orderType)
-                        .build())
+                .map(getEntryOrderDisplayFunction(orderType))
                 .sorted(orderDisplayComparator)
                 .collect(toUnmodifiableList());
+    }
+
+    private static Function<Map.Entry<Money, List<Order>>, OrderDisplay> getEntryOrderDisplayFunction(OrderType orderType) {
+        return entry -> anOrderDisplay()
+                .withPricePerKilogram(entry.getKey())
+                .withQuantity(entry.getValue().stream()
+                        .map(Order::getQuantity)
+                        .reduce(Double::sum).orElse((double) 0L))
+                .withType(orderType)
+                .build();
     }
 
     public OrderId registerOrder(final Order order) {
