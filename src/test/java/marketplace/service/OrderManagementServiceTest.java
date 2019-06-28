@@ -8,11 +8,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.concurrent.ExecutionException;
+
+import static java.util.List.of;
+import static marketplace.domain.Event.CANCEL;
 import static marketplace.domain.Order.OrderBuilder.anOrder;
+import static marketplace.domain.OrderDisplay.OrderDisplayBuilder.anOrderDisplay;
 import static marketplace.domain.OrderType.BUY;
+import static marketplace.domain.OrderType.SELL;
 import static marketplace.domain.TinyType.Money.MoneyBuilder.aMoney;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static marketplace.domain.TinyType.OrderId.OrderIdBuilder.anOrderId;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderManagementServiceTest {
@@ -30,7 +37,6 @@ class OrderManagementServiceTest {
     @Test
     @DisplayName("Register an order on the system")
     void registerOrderToMarket() {
-
         final var order = anOrder()
                 .withUserId("user1")
                 .withQuantity(5.8)
@@ -40,9 +46,86 @@ class OrderManagementServiceTest {
                 .withType(BUY)
                 .build();
 
-        orderManagementServiceUnderTest.registerOrder(order);
+        var id = 73537876L;
+        when(orderRepository.save(order)).thenReturn(anOrderId()
+                .withId(id)
+                .build());
+
+        var orderId = orderManagementServiceUnderTest.registerOrder(order);
+
+        assertThat(orderId).isEqualTo(anOrderId()
+                .withId(id)
+                .build());
 
         verify(orderRepository).save(order);
+        verifyNoMoreInteractions(orderRepository);
+    }
+
+    @Test
+    @DisplayName("Cancel an existing order")
+    void cancelAnRegisteredOrder() {
+        var orderId = anOrderId()
+                .withId(73537876L)
+                .build();
+        orderManagementServiceUnderTest.cancelOrder(orderId);
+
+        verify(orderRepository).createEvent(orderId, CANCEL);
+        verifyNoMoreInteractions(orderRepository);
+    }
+
+    @Test
+    @DisplayName("Display buy orders for unique price in order of highest price")
+    void displayCurrentOrderBoardForBuyWithOrderedOfHighestPrice() throws ExecutionException, InterruptedException {
+        when(orderRepository.getLiveOrders()).thenReturn(of(anOrder()
+                        .withUserId("user1")
+                        .withQuantity(4.8)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(234L)
+                                .build())
+                        .withType(BUY)
+                        .build()
+                , anOrder()
+                        .withUserId("user2")
+                        .withQuantity(5.8)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(582L)
+                                .build())
+                        .withType(BUY)
+                        .build()
+                , anOrder()
+                        .withUserId("user1")
+                        .withQuantity(8.4)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(646L)
+                                .build())
+                        .withType(SELL)
+                        .build()
+                , anOrder()
+                        .withUserId("user4")
+                        .withQuantity(5.8)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(582L)
+                                .build())
+                        .withType(BUY)
+                        .build()));
+
+        var orderBoard = orderManagementServiceUnderTest.getOrderBoard();
+        assertThat(orderBoard.getBuyOrders()).containsExactly(anOrderDisplay()
+                        .withQuantity(11.6)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(582L)
+                                .build())
+                        .withType(BUY)
+                        .build()
+                , anOrderDisplay()
+                        .withQuantity(4.8)
+                        .withPricePerKilogram(aMoney()
+                                .withPrice(234L)
+                                .build())
+                        .withType(BUY)
+                        .build());
+
+        verify(orderRepository).getLiveOrders();
         verifyNoMoreInteractions(orderRepository);
     }
 }
