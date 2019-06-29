@@ -49,7 +49,7 @@ public class OrderManagementService {
                 .withPricePerKilogram(entry.getKey())
                 .withQuantity(entry.getValue().stream()
                         .map(Order::getQuantity)
-                        .reduce(Double::sum).orElse((double) 0L))
+                        .reduce(Double::sum).orElseGet(() -> (double) 0L))
                 .withType(orderType)
                 .build();
     }
