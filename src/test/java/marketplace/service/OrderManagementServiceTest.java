@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.concurrent.ExecutionException;
 
 import static java.util.List.of;
-import static marketplace.domain.Event.CANCEL;
+import static marketplace.domain.EventType.CANCEL;
 import static marketplace.domain.Order.OrderBuilder.anOrder;
 import static marketplace.domain.OrderDisplay.OrderDisplayBuilder.anOrderDisplay;
 import static marketplace.domain.OrderType.BUY;

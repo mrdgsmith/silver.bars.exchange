@@ -21,7 +21,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.*;
-import static marketplace.domain.Event.CANCEL;
+import static marketplace.domain.EventType.CANCEL;
 import static marketplace.domain.OrderBoard.OrderBoardBuilder.anOrderBoard;
 import static marketplace.domain.OrderDisplay.OrderDisplayBuilder.anOrderDisplay;
 import static marketplace.domain.OrderType.BUY;
