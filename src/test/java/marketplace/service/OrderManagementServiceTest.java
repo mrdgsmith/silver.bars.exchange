@@ -130,7 +130,7 @@ class OrderManagementServiceTest {
     }
 
     @Test
-    @DisplayName("Display sell orders for unique price in order of highest price")
+    @DisplayName("Display sell orders for unique price in order of lowest price")
     void displayCurrentOrderBoardForSellWithOrderedOfLowestPrice() throws ExecutionException, InterruptedException {
         when(orderRepository.getLiveOrders()).thenReturn(of(anOrder()
                         .withUserId("user1")

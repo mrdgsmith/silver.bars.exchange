@@ -12,7 +12,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
@@ -34,7 +33,7 @@ public class OrderManagementService {
         this.orderRepository = orderRepository;
     }
 
-    private static List<OrderDisplay> createDisplayOrders(final ConcurrentMap<OrderType, List<Order>> orders
+    private static List<OrderDisplay> createDisplayOrders(final Map<OrderType, List<Order>> orders
             , final OrderType orderType
             , final Comparator<OrderDisplay> orderDisplayComparator) {
         return orders.getOrDefault(orderType, emptyList()).stream()
@@ -45,7 +44,7 @@ public class OrderManagementService {
                 .collect(toUnmodifiableList());
     }
 
-    private static Function<Map.Entry<Money, List<Order>>, OrderDisplay> getEntryOrderDisplayFunction(OrderType orderType) {
+    private static Function<Map.Entry<Money, List<Order>>, OrderDisplay> getEntryOrderDisplayFunction(final OrderType orderType) {
         return entry -> anOrderDisplay()
                 .withPricePerKilogram(entry.getKey())
                 .withQuantity(entry.getValue().stream()
@@ -73,7 +72,7 @@ public class OrderManagementService {
         final Callable<List<OrderDisplay>> getSellOrders = () -> createDisplayOrders(orders, SELL
                 , comparing(OrderDisplay::getPricePerKilogram));
 
-        var executorService = newFixedThreadPool(getRuntime().availableProcessors());
+        final var executorService = newFixedThreadPool(getRuntime().availableProcessors());
         final var processBuyOrders = executorService.submit(getBuyOrders);
         final var processSellOrders = executorService.submit(getSellOrders);
         return anOrderBoard()
