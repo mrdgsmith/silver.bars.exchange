@@ -27,6 +27,15 @@ public class OrderRepositoryInMemory implements OrderRepository {
         this.orderIdCounter = new AtomicInteger(orderMap.size());
     }
 
+    private static boolean isLiveOrder(final marketplace.repository.entity.Order order) {
+        final var events = order.getEvents();
+        synchronized (events) {
+            return !events.stream()
+                    .map(Event::getEventType)
+                    .collect(toUnmodifiableList()).contains(CANCEL);
+        }
+    }
+
     @Override
     public OrderId save(final Order order) {
         OrderId orderId = anOrderId()
@@ -60,9 +69,7 @@ public class OrderRepositoryInMemory implements OrderRepository {
     @Override
     public List<Order> getLiveOrders() {
         return orderMap.values().stream()
-                .filter(order -> !order.getEvents().stream()
-                        .map(Event::getEventType)
-                        .collect(toUnmodifiableList()).contains(CANCEL))
+                .filter(OrderRepositoryInMemory::isLiveOrder)
                 .map(order -> anOrder()
                         .withType(order.getType())
                         .withUserId(order.getUserId())
