@@ -10,7 +10,7 @@ to run use the following command
 
 **Assumptions**
 
-Not to merge orders hat have same price but different order type (BUY, SELL).
+Not to merge orders that have same price but different order type (BUY, SELL).
 
 **Notes**
 
